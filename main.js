@@ -22,8 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadAudioBtn.addEventListener("click", () => {
     const audioIdentifierValue = audioIdentifier.value.trim();
     if (audioIdentifierValue) {
-      tapList.innerHTML = ""; // Xóa danh sách bài cũ
-      localStorage.setItem(STORAGE_KEY_AUDIO_ID, audioIdentifierValue); // Lưu giá trị audioIdentifier vào localStorage
+      tapList.innerHTML = ""; // Clear the previous list
+      localStorage.setItem(STORAGE_KEY_AUDIO_ID, audioIdentifierValue); // Save audioIdentifier to localStorage
       fetchAudioList(audioIdentifierValue);
     } else {
       console.warn("Vui lòng nhập mã audio!");
@@ -33,6 +33,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const fetchAudioList = async (nameUrl) => {
     try {
       const response = await fetch(`https://archive.org/metadata/${nameUrl}`);
+      if (!response.ok) {
+        alert("URL không hợp lệ hoặc không tồn tại. Vui lòng kiểm tra lại.");
+        return;
+      }
       const data = await response.json();
       const fragment = document.createDocumentFragment();
       tapSources = data.files
@@ -56,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       loadSavedTapAndTime();
     } catch (error) {
+      alert("URL không hợp lệ hoặc không tồn tại. Vui lòng kiểm tra lại.");
       console.error("Error fetching audio list:", error);
     }
   };
@@ -150,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     volumeValue.textContent = `${Math.round(newVolume * 100)}%`;
   });
 
-  // Tự động tải lại danh sách audio khi trang load, nếu có giá trị trong localStorage
+  // Auto-load the saved audio list when the page reloads if an audio ID is saved
   const savedAudioIdentifier = localStorage.getItem(STORAGE_KEY_AUDIO_ID);
   if (savedAudioIdentifier) {
     audioIdentifier.value = savedAudioIdentifier;
