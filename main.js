@@ -30,15 +30,51 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  const fetchAudioList = async (nameUrl) => {
+  // const fetchAudioList = async (nameUrl) => {
+  //   try {
+  //     const response = await fetch(`https://archive.org/metadata/${nameUrl}`);
+  //     if (!response.ok) {
+  //       alert("URL không hợp lệ hoặc không tồn tại. Vui lòng kiểm tra lại.");
+  //       return;
+  //     }
+  //     const data = await response.json();
+  //     const fragment = document.createDocumentFragment();
+  //     tapSources = data.files
+  //       .filter((file) => file.format === "VBR MP3")
+  //       .map((file) => {
+  //         const match = file.name.match(/^\d+/);
+  //         const title = match ? `Tập ${match[0].padStart(3, "0")}` : file.name;
+  //         return {
+  //           url: `https://archive.org/download/${nameUrl}/${file.name}`,
+  //           title: title,
+  //         };
+  //       });
+  //     tapSources.forEach((tap, index) => {
+  //       const li = document.createElement("li");
+  //       li.textContent = tap.title;
+  //       li.dataset.index = index;
+  //       li.addEventListener("click", () => loadTap(index));
+  //       fragment.appendChild(li);
+  //     });
+  //     tapList.appendChild(fragment);
+
+  //     loadSavedTapAndTime();
+  //   } catch (error) {
+  //     alert("URL không hợp lệ hoặc không tồn tại. Vui lòng kiểm tra lại.");
+  //     console.error("Error fetching audio list:", error);
+  //   }
+  // };
+
+  const fetchAudioList = async (nameUrl, retryCount = 5) => {
     try {
       const response = await fetch(`https://archive.org/metadata/${nameUrl}`);
       if (!response.ok) {
-        alert("URL không hợp lệ hoặc không tồn tại. Vui lòng kiểm tra lại.");
-        return;
+        throw new Error("URL không hợp lệ hoặc không tồn tại.");
       }
       const data = await response.json();
       const fragment = document.createDocumentFragment();
+
+      // Lọc và xử lý danh sách các file audio
       tapSources = data.files
         .filter((file) => file.format === "VBR MP3")
         .map((file) => {
@@ -49,6 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
             title: title,
           };
         });
+
+      // Hiển thị danh sách tập audio
       tapSources.forEach((tap, index) => {
         const li = document.createElement("li");
         li.textContent = tap.title;
@@ -56,12 +94,22 @@ document.addEventListener("DOMContentLoaded", () => {
         li.addEventListener("click", () => loadTap(index));
         fragment.appendChild(li);
       });
+
       tapList.appendChild(fragment);
 
+      // Tải tập audio đã lưu trước đó
       loadSavedTapAndTime();
     } catch (error) {
-      alert("URL không hợp lệ hoặc không tồn tại. Vui lòng kiểm tra lại.");
-      console.error("Error fetching audio list:", error);
+      console.error(`Lỗi khi gọi API (lần ${6 - retryCount}/5):`, error);
+
+      if (retryCount > 1) {
+        console.warn(`Thử lại sau 2 giây...`);
+        setTimeout(() => fetchAudioList(nameUrl, retryCount - 1), 2000);
+      } else {
+        alert(
+          "Không thể tải danh sách audio. Vui lòng kiểm tra URL hoặc thử lại sau."
+        );
+      }
     }
   };
 
