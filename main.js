@@ -86,6 +86,16 @@ document.addEventListener("DOMContentLoaded", () => {
           };
         });
 
+      tapSources.sort((a, b) => {
+        // Lấy số thứ tự trong tên file
+        let numA = parseInt(a.title.replace(/\D/g, "")); // Chuyển "chuong_1.mp3" thành 1
+        let numB = parseInt(b.title.replace(/\D/g, "")); // Chuyển "chuong_10.mp3" thành 10
+
+        // So sánh hai số thứ tự để sắp xếp
+        return numA - numB;
+      });
+      console.log(tapSources);
+      
       // Hiển thị danh sách tập audio
       tapSources.forEach((tap, index) => {
         const li = document.createElement("li");
